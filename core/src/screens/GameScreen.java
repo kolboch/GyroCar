@@ -6,13 +6,19 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGdxGame;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import sprites.Car;
 import sprites.Chicane;
+import sprites.Obstacle;
 
 /**
  * Created by Karlo on 2017-06-03.
@@ -26,16 +32,20 @@ public class GameScreen implements Screen {
     private static final float BG_GREY = 41 / 255f;
     private static final int ROAD_WIDTH_CAR_WIDTH_SCALE = 4;
     private static final int CHICANE_OFFSET = (int) -Chicane.CHICANE_HEIGHT / 2;
+    private static final int NUMBER_OF_OBSTACLES = 7;
+    private static final int OBSTACLE_SPACING = Car.CAR_HEIGHT * 2;
 
     private final int INIT_CAR_X;
     private final int INIT_CAR_Y;
 
     private Car car;
     private Chicane chicane1, chicane2;
+    private List<Obstacle> obstacles;
     private Game game;
     private OrthographicCamera camera;
     private SpriteBatch batch;
     private Viewport viewport;
+    private float obstacleMinX, obstacleMaxX;
 
     public GameScreen(Game game) {
         this.game = game;
@@ -43,6 +53,13 @@ public class GameScreen implements Screen {
         viewport = new FitViewport(MyGdxGame.GAME_WIDTH, MyGdxGame.GAME_HEIGHT, camera);
         INIT_CAR_X = (int) (camera.position.x - Car.CAR_WIDTH / 2);
         INIT_CAR_Y = (int) (camera.position.y / 2);
+    }
+
+    private void initObstacles(float y, float minX, float maxX) {
+        obstacles = new LinkedList<Obstacle>();
+        for (int i = 0; i < NUMBER_OF_OBSTACLES; i++) {
+            obstacles.add(new Obstacle(y + i * (Obstacle.OBSTACLE_HEIGHT + OBSTACLE_SPACING), minX, maxX));
+        }
     }
 
     @Override
@@ -54,6 +71,9 @@ public class GameScreen implements Screen {
         float rightChicaneX = leftChicaneX + Chicane.CHICANE_WIDTH + ROAD_WIDTH_CAR_WIDTH_SCALE * Car.CAR_WIDTH;
         chicane1 = new Chicane(CHICANE_OFFSET, leftChicaneX, rightChicaneX);
         chicane2 = new Chicane(CHICANE_OFFSET + Chicane.CHICANE_HEIGHT, leftChicaneX, rightChicaneX);
+        obstacleMinX = leftChicaneX + Chicane.CHICANE_WIDTH;
+        obstacleMaxX = rightChicaneX;
+        initObstacles(INIT_CAR_Y * 4, obstacleMinX, obstacleMaxX);
     }
 
     @Override
@@ -66,6 +86,7 @@ public class GameScreen implements Screen {
         batch.begin();
         batch.draw(car.getCarTexture(), car.getPosition().x, car.getPosition().y);
         drawChicanes(batch);
+        drawObstacles(batch);
         batch.end();
     }
 
@@ -73,11 +94,29 @@ public class GameScreen implements Screen {
         car.update(delta, GROUND_SPEED);
         updateCamera();
         updateChicanes();
+        updateObstacles();
     }
 
     private void updateCamera() {
         camera.position.y = car.getPosition().y + camera.viewportHeight / 3;  // setting position + offset
         camera.update();
+    }
+
+    private void drawObstacles(SpriteBatch batch) {
+        Texture obstacleTexture = Obstacle.getObstacleTexture();
+        for (int i = 0; i < obstacles.size(); i++) {
+            Obstacle current = obstacles.get(i);
+            batch.draw(obstacleTexture, current.getPosition().x, current.getPosition().y);
+        }
+    }
+
+    private void updateObstacles() {
+        if (obstacles.get(0).getPosition().y + Obstacle.OBSTACLE_HEIGHT < camera.position.y - camera.viewportHeight / 2) {
+            Obstacle toReposition = obstacles.remove(0);
+            Obstacle last = obstacles.get(obstacles.size() - 1);
+            toReposition.reposition(last.getPosition().y + Obstacle.OBSTACLE_HEIGHT + OBSTACLE_SPACING, obstacleMinX, obstacleMaxX);
+            obstacles.add(toReposition);
+        }
     }
 
     private void updateChicanes() {
@@ -133,5 +172,6 @@ public class GameScreen implements Screen {
         batch.dispose();
         chicane1.dispose();
         chicane2.dispose();
+        Obstacle.dispose(); // as texture for obstacles is static
     }
 }
