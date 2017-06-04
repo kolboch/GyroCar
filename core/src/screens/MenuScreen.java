@@ -7,6 +7,8 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGdxGame;
 
 /**
@@ -20,12 +22,13 @@ public class MenuScreen implements Screen {
     private Game game;
     private SpriteBatch batch;
     private OrthographicCamera camera;
+    private Viewport viewport;
 
-    public MenuScreen(Game game){
+    public MenuScreen(Game game) {
         Gdx.app.log(LOG_TAG, "Constructor called.");
         this.game = game;
         this.camera = new OrthographicCamera();
-        this.camera.setToOrtho(false, MyGdxGame.GAME_WIDTH, MyGdxGame.GAME_HEIGHT);
+        viewport = new FitViewport(MyGdxGame.GAME_WIDTH, MyGdxGame.GAME_HEIGHT, camera);
     }
 
     @Override
@@ -49,9 +52,7 @@ public class MenuScreen implements Screen {
 
     @Override
     public void resize(int width, int height) {
-        camera.viewportHeight = height;
-        camera.viewportWidth = width;
-        camera.update();
+        viewport.update(width, height);
     }
 
     @Override
@@ -77,8 +78,8 @@ public class MenuScreen implements Screen {
         batch.dispose();
     }
 
-    private void handleInput(){
-        if(Gdx.input.justTouched()){
+    private void handleInput() {
+        if (Gdx.input.justTouched()) {
             this.game.setScreen(new GameScreen(game));
         }
     }

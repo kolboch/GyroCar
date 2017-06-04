@@ -1,5 +1,6 @@
 package sprites;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
@@ -10,30 +11,50 @@ import com.badlogic.gdx.math.Vector3;
 
 public class Car {
 
+    public static final int CAR_WIDTH;
+    public static final int CAR_HEIGHT;
+
     private Texture carTexture;
     private Rectangle bounds;
     private Vector3 position;
     private Vector3 velocity;
+    private static String texturePath = "lambo.png";
+
+    static {
+        Texture textureForDims = new Texture(texturePath);
+        CAR_WIDTH = textureForDims.getWidth();
+        CAR_HEIGHT = textureForDims.getHeight();
+        textureForDims.dispose();
+    }
 
     public Car(int x, int y) {
         position = new Vector3(x, y, 0);
         velocity = new Vector3(0, 0, 0);
-        carTexture = new Texture("lambo.png");
+        carTexture = new Texture(texturePath);
     }
 
-    public void update(float delta, float speed){
-
+    public void update(float delta, float speed) {
+        if (position.y >= 0) {
+            velocity.add(0, speed, 0);
+        }
+        velocity.scl(delta);
+        position.add(velocity.x, velocity.y, velocity.z);
+        if (position.y < 0) {
+            position.y = 0;
+            velocity.y = 0;
+            velocity.x = 0;
+        }
     }
 
-    public Vector3 getPosition(){
+    public Vector3 getPosition() {
         return position;
     }
 
-    public Texture getCarTexture(){
+    public Texture getCarTexture() {
         return carTexture;
     }
 
-    public void dispose(){
+    public void dispose() {
         carTexture.dispose();
     }
 }
