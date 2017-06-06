@@ -16,6 +16,7 @@ import com.mygdx.game.MyGdxGame;
 import java.util.LinkedList;
 import java.util.List;
 
+import input_adapters.AccelerometerHandler;
 import input_adapters.TestInputAdapter;
 import sprites.Car;
 import sprites.Chicane;
@@ -36,6 +37,7 @@ public class GameScreen implements Screen {
     private static final int NUMBER_OF_OBSTACLES = 7;
     private static final int OBSTACLE_SPACING = Car.CAR_HEIGHT * 2;
     private static final float TURN_REACTION = 100;
+    private static final float ACCELEROMETER_INTENSIFIER = 30;
 
     private final int INIT_CAR_X;
     private final int INIT_CAR_Y;
@@ -48,6 +50,7 @@ public class GameScreen implements Screen {
     private SpriteBatch batch;
     private Viewport viewport;
     private TestInputAdapter inputAdapter;
+    private AccelerometerHandler accelerHandler;
     private float obstacleMinX, obstacleMaxX;
 
     public GameScreen(Game game) {
@@ -120,6 +123,9 @@ public class GameScreen implements Screen {
         updateCamera();
         updateChicanes();
         updateObstacles();
+        if(accelerHandler != null){
+            accelerHandler.update();
+        }
     }
 
     private void updateCamera() {
@@ -170,8 +176,13 @@ public class GameScreen implements Screen {
     }
 
     private void setInputAdapter(Car car) {
-        inputAdapter = new TestInputAdapter(car, TURN_REACTION);
-        Gdx.input.setInputProcessor(inputAdapter);
+        if (Gdx.input.isPeripheralAvailable(Input.Peripheral.Accelerometer)) {
+            Gdx.app.log(LOG_TAG, "Acc available");
+            accelerHandler = new AccelerometerHandler(car, ACCELEROMETER_INTENSIFIER);
+        } else {
+            inputAdapter = new TestInputAdapter(car, TURN_REACTION);
+            Gdx.input.setInputProcessor(inputAdapter);
+        }
     }
 
     @Override

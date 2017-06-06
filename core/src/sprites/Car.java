@@ -6,6 +6,8 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 
+import screens.GameScreen;
+
 /**
  * Created by Karlo on 2017-06-03.
  */
@@ -43,14 +45,15 @@ public class Car {
         }
         velocity.scl(delta);
         position.add(velocity.x, velocity.y, velocity.z);
-        Gdx.app.log("CAR CLASS", "Position:" + velocity);
     }
 
     public void turn(Vector3 turnVector) {
-        if(this.turn.y + turnVector.y < 0){
-            return;
+        if (turnVector.y != 0) {
+            if (this.turn.y + turnVector.y > 0) {
+                this.turn.add(turnVector);
+            }
         }
-        this.turn.add(turnVector);
+        this.turn.x = turnVector.x;
     }
 
     public Vector3 getPosition() {
