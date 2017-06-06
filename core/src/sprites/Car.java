@@ -1,12 +1,8 @@
 package sprites;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
-
-import screens.GameScreen;
 
 /**
  * Created by Karlo on 2017-06-03.
@@ -33,6 +29,7 @@ public class Car {
 
     public Car(int x, int y) {
         position = new Vector3(x, y, 0);
+        bounds = new Rectangle(position.x, position.y, CAR_WIDTH, CAR_HEIGHT);
         velocity = new Vector3(0, 0, 0);
         turn = new Vector3(0, 0, 0);
         carTexture = new Texture(texturePath);
@@ -45,6 +42,7 @@ public class Car {
         }
         velocity.scl(delta);
         position.add(velocity.x, velocity.y, velocity.z);
+        updateBounds();
     }
 
     public void turn(Vector3 turnVector) {
@@ -54,6 +52,10 @@ public class Car {
             }
         }
         this.turn.x = turnVector.x;
+    }
+
+    public Rectangle getBounds(){
+        return bounds;
     }
 
     public Vector3 getPosition() {
@@ -66,5 +68,10 @@ public class Car {
 
     public void dispose() {
         carTexture.dispose();
+    }
+
+    private void updateBounds(){
+        bounds.x = position.x;
+        bounds.y = position.y;
     }
 }

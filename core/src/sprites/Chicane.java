@@ -2,6 +2,7 @@ package sprites;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
 /**
@@ -16,6 +17,7 @@ public class Chicane {
 
     private Texture chicaneLeft, chicaneRight;
     private Vector2 positionLeft, positionRight;
+    private Rectangle boundsLeft, boundsRight;
 
     static {
         Texture textureDims = new Texture(chicaneTexturePath);
@@ -28,6 +30,8 @@ public class Chicane {
         chicaneRight = new Texture("chicane_right.png");
         positionLeft = new Vector2(leftX, y);
         positionRight = new Vector2(rightX, y);
+        boundsLeft = new Rectangle(positionLeft.x, positionLeft.y, CHICANE_WIDTH, CHICANE_HEIGHT);
+        boundsRight = new Rectangle(positionRight.x, positionRight.y, CHICANE_WIDTH, CHICANE_HEIGHT);
     }
 
     public Texture getChicaneLeftTexture() {
@@ -56,5 +60,17 @@ public class Chicane {
         positionLeft.y = y;
         positionRight.x = rightX;
         positionRight.y = y;
+        updateBounds();
+    }
+
+    public boolean collides(Rectangle otherBounds){
+        return otherBounds.overlaps(boundsLeft) || otherBounds.overlaps(boundsRight);
+    }
+
+    private void updateBounds(){
+        boundsLeft.x = positionLeft.x;
+        boundsLeft.y = positionLeft.y;
+        boundsRight.x = positionRight.x;
+        boundsRight.y = positionRight.y;
     }
 }

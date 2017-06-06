@@ -6,9 +6,8 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGdxGame;
@@ -28,14 +27,15 @@ import sprites.Obstacle;
 
 public class GameScreen implements Screen {
 
-    public static final int GROUND_SPEED = 120;
+    public static final int GROUND_SPEED = 150;
 
     private static final String LOG_TAG = GameScreen.class.getSimpleName();
     private static final float BG_GREY = 41 / 255f;
     private static final int ROAD_WIDTH_CAR_WIDTH_SCALE = 4;
     private static final int CHICANE_OFFSET = (int) -Chicane.CHICANE_HEIGHT / 2;
     private static final int NUMBER_OF_OBSTACLES = 7;
-    private static final int OBSTACLE_SPACING = Car.CAR_HEIGHT * 2;
+    private static final int OBSTACLE_SPACING = (int)(Car.CAR_HEIGHT * 3f);
+    private static final int FIRST_OBSTACLE_OFFSET_CAR_HEIGHT_SCALE = 4;
     private static final float TURN_REACTION = 100;
     private static final float ACCELEROMETER_INTENSIFIER = 30;
 
@@ -50,7 +50,7 @@ public class GameScreen implements Screen {
     private SpriteBatch batch;
     private Viewport viewport;
     private TestInputAdapter inputAdapter;
-    private AccelerometerHandler accelerHandler;
+    private AccelerometerHandler accelerometerHandler;
     private float obstacleMinX, obstacleMaxX;
 
     public GameScreen(Game game) {
@@ -79,7 +79,7 @@ public class GameScreen implements Screen {
         chicane2 = new Chicane(CHICANE_OFFSET + Chicane.CHICANE_HEIGHT, leftChicaneX, rightChicaneX);
         obstacleMinX = leftChicaneX + Chicane.CHICANE_WIDTH;
         obstacleMaxX = rightChicaneX;
-        initObstacles(INIT_CAR_Y * 4, obstacleMinX, obstacleMaxX);
+        initObstacles(INIT_CAR_Y + Car.CAR_HEIGHT * FIRST_OBSTACLE_OFFSET_CAR_HEIGHT_SCALE, obstacleMinX, obstacleMaxX);
         setInputAdapter(car);
     }
 
@@ -89,6 +89,7 @@ public class GameScreen implements Screen {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         handleInput();
         updateAll(delta);
+        checkCollisions();
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
         batch.draw(car.getCarTexture(), car.getPosition().x, car.getPosition().y);
@@ -123,8 +124,23 @@ public class GameScreen implements Screen {
         updateCamera();
         updateChicanes();
         updateObstacles();
-        if(accelerHandler != null){
-            accelerHandler.update();
+        if (accelerometerHandler != null) {
+            accelerometerHandler.update();
+        }
+    }
+
+    private void checkCollisions() {
+        boolean collision = false;
+        Rectangle carBounds = car.getBounds();
+        if (chicane1.collides(carBounds) || chicane2.collides(carBounds)) {
+            collision = true;
+        } else {
+            for (int i = 0; i < obstacles.size() && !collision; i++) {
+                collision = obstacles.get(i).collides(carBounds);
+            }
+        }
+        if (collision) {
+            game.setScreen(new MenuScreen(game));
         }
     }
 
@@ -134,10 +150,9 @@ public class GameScreen implements Screen {
     }
 
     private void drawObstacles(SpriteBatch batch) {
-        Texture obstacleTexture = Obstacle.getObstacleTexture();
         for (int i = 0; i < obstacles.size(); i++) {
             Obstacle current = obstacles.get(i);
-            batch.draw(obstacleTexture, current.getPosition().x, current.getPosition().y);
+            batch.draw(current.getObstacleTexture(), current.getPosition().x, current.getPosition().y);
         }
     }
 
@@ -178,7 +193,7 @@ public class GameScreen implements Screen {
     private void setInputAdapter(Car car) {
         if (Gdx.input.isPeripheralAvailable(Input.Peripheral.Accelerometer)) {
             Gdx.app.log(LOG_TAG, "Acc available");
-            accelerHandler = new AccelerometerHandler(car, ACCELEROMETER_INTENSIFIER);
+            accelerometerHandler = new AccelerometerHandler(car, ACCELEROMETER_INTENSIFIER);
         } else {
             inputAdapter = new TestInputAdapter(car, TURN_REACTION);
             Gdx.input.setInputProcessor(inputAdapter);
@@ -192,7 +207,9 @@ public class GameScreen implements Screen {
         batch.dispose();
         chicane1.dispose();
         chicane2.dispose();
-        Obstacle.dispose(); // as texture for obstacles is static
+        for (int i = 0; i < obstacles.size(); i++) {
+            obstacles.get(i).dispose();
+        }
     }
 
 }
