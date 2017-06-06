@@ -16,6 +16,7 @@ import com.mygdx.game.MyGdxGame;
 import java.util.LinkedList;
 import java.util.List;
 
+import input_adapters.TestInputAdapter;
 import sprites.Car;
 import sprites.Chicane;
 import sprites.Obstacle;
@@ -34,6 +35,7 @@ public class GameScreen implements Screen {
     private static final int CHICANE_OFFSET = (int) -Chicane.CHICANE_HEIGHT / 2;
     private static final int NUMBER_OF_OBSTACLES = 7;
     private static final int OBSTACLE_SPACING = Car.CAR_HEIGHT * 2;
+    private static final float TURN_REACTION = 100;
 
     private final int INIT_CAR_X;
     private final int INIT_CAR_Y;
@@ -45,6 +47,7 @@ public class GameScreen implements Screen {
     private OrthographicCamera camera;
     private SpriteBatch batch;
     private Viewport viewport;
+    private TestInputAdapter inputAdapter;
     private float obstacleMinX, obstacleMaxX;
 
     public GameScreen(Game game) {
@@ -74,6 +77,7 @@ public class GameScreen implements Screen {
         obstacleMinX = leftChicaneX + Chicane.CHICANE_WIDTH;
         obstacleMaxX = rightChicaneX;
         initObstacles(INIT_CAR_Y * 4, obstacleMinX, obstacleMaxX);
+        setInputAdapter(car);
     }
 
     @Override
@@ -88,6 +92,27 @@ public class GameScreen implements Screen {
         drawChicanes(batch);
         drawObstacles(batch);
         batch.end();
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        viewport.update(width, height);
+    }
+
+    @Override
+    public void pause() {
+
+    }
+
+    @Override
+    public void resume() {
+
+    }
+
+    @Override
+    public void hide() {
+        Gdx.app.log(LOG_TAG, "Hide called");
+        dispose();
     }
 
     private void updateAll(float delta) {
@@ -144,25 +169,9 @@ public class GameScreen implements Screen {
         }
     }
 
-    @Override
-    public void resize(int width, int height) {
-        viewport.update(width, height);
-    }
-
-    @Override
-    public void pause() {
-
-    }
-
-    @Override
-    public void resume() {
-
-    }
-
-    @Override
-    public void hide() {
-        Gdx.app.log(LOG_TAG, "Hide called");
-        dispose();
+    private void setInputAdapter(Car car) {
+        inputAdapter = new TestInputAdapter(car, TURN_REACTION);
+        Gdx.input.setInputProcessor(inputAdapter);
     }
 
     @Override
@@ -174,4 +183,5 @@ public class GameScreen implements Screen {
         chicane2.dispose();
         Obstacle.dispose(); // as texture for obstacles is static
     }
+
 }

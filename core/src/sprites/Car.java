@@ -2,6 +2,7 @@ package sprites;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 
@@ -18,6 +19,7 @@ public class Car {
     private Rectangle bounds;
     private Vector3 position;
     private Vector3 velocity;
+    private Vector3 turn;
     private static String texturePath = "lambo.png";
 
     static {
@@ -30,20 +32,25 @@ public class Car {
     public Car(int x, int y) {
         position = new Vector3(x, y, 0);
         velocity = new Vector3(0, 0, 0);
+        turn = new Vector3(0, 0, 0);
         carTexture = new Texture(texturePath);
     }
 
     public void update(float delta, float speed) {
         if (position.y >= 0) {
             velocity.add(0, speed, 0);
+            velocity.add(turn);
         }
         velocity.scl(delta);
         position.add(velocity.x, velocity.y, velocity.z);
-        if (position.y < 0) {
-            position.y = 0;
-            velocity.y = 0;
-            velocity.x = 0;
+        Gdx.app.log("CAR CLASS", "Position:" + velocity);
+    }
+
+    public void turn(Vector3 turnVector) {
+        if(this.turn.y + turnVector.y < 0){
+            return;
         }
+        this.turn.add(turnVector);
     }
 
     public Vector3 getPosition() {
