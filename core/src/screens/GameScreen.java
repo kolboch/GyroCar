@@ -4,6 +4,7 @@ import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -34,10 +35,11 @@ public class GameScreen implements Screen {
     private static final int ROAD_WIDTH_CAR_WIDTH_SCALE = 4;
     private static final int CHICANE_OFFSET = (int) -Chicane.CHICANE_HEIGHT / 2;
     private static final int NUMBER_OF_OBSTACLES = 7;
-    private static final int OBSTACLE_SPACING = (int)(Car.CAR_HEIGHT * 3f);
+    private static final int OBSTACLE_SPACING = (int) (Car.CAR_HEIGHT * 3f);
     private static final int FIRST_OBSTACLE_OFFSET_CAR_HEIGHT_SCALE = 4;
     private static final float TURN_REACTION = 100;
     private static final float ACCELEROMETER_INTENSIFIER = 30;
+    private static final float MUSIC_VOLUME = 0.7f;
 
     private final int INIT_CAR_X;
     private final int INIT_CAR_Y;
@@ -52,6 +54,8 @@ public class GameScreen implements Screen {
     private TestInputAdapter inputAdapter;
     private AccelerometerHandler accelerometerHandler;
     private float obstacleMinX, obstacleMaxX;
+    private float groundSpeed;
+    private Music backgroundMusic;
 
     public GameScreen(Game game) {
         this.game = game;
@@ -81,6 +85,8 @@ public class GameScreen implements Screen {
         obstacleMaxX = rightChicaneX;
         initObstacles(INIT_CAR_Y + Car.CAR_HEIGHT * FIRST_OBSTACLE_OFFSET_CAR_HEIGHT_SCALE, obstacleMinX, obstacleMaxX);
         setInputAdapter(car);
+        initMusic(MUSIC_VOLUME);
+        startGameEffect();
     }
 
     @Override
@@ -120,7 +126,7 @@ public class GameScreen implements Screen {
     }
 
     private void updateAll(float delta) {
-        car.update(delta, GROUND_SPEED);
+        car.update(delta, groundSpeed);
         updateCamera();
         updateChicanes();
         updateObstacles();
@@ -200,6 +206,39 @@ public class GameScreen implements Screen {
         }
     }
 
+    private void startGameEffect() {
+        stopMovement();
+        raceStartMusic(MUSIC_VOLUME);
+    }
+
+    private void stopMovement() {
+        groundSpeed = 0;
+        backgroundMusic.setVolume(backgroundMusic.getVolume() / 5);
+        disableInputs();
+    }
+
+    public void resumeMovement() {
+        groundSpeed = GROUND_SPEED;
+        backgroundMusic.setVolume(MUSIC_VOLUME);
+        setInputAdapter(car);
+    }
+
+    private void disableInputs(){
+        accelerometerHandler = null;
+        Gdx.input.setInputProcessor(null);
+    }
+
+    private void initMusic(float volume) {
+        backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("background.mp3"));
+        backgroundMusic.setVolume(volume);
+        backgroundMusic.setLooping(true);
+        backgroundMusic.play();
+    }
+
+    private void raceStartMusic(float volume){
+        car.playCarStartSounds(volume, this);
+    }
+
     @Override
     public void dispose() {
         Gdx.app.log(LOG_TAG, "Dispose called.");
@@ -210,6 +249,6 @@ public class GameScreen implements Screen {
         for (int i = 0; i < obstacles.size(); i++) {
             obstacles.get(i).dispose();
         }
+        backgroundMusic.dispose();
     }
-
 }
