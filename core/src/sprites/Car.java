@@ -4,12 +4,14 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 
 import java.util.ArrayList;
 
+import interfaces.MyDrawable;
 import music_utils.MusicUtils;
 import screens.GameScreen;
 
@@ -17,7 +19,7 @@ import screens.GameScreen;
  * Created by Karlo on 2017-06-03.
  */
 
-public class Car {
+public class Car implements MyDrawable{
 
     public static final int CAR_WIDTH;
     public static final int CAR_HEIGHT;
@@ -45,7 +47,7 @@ public class Car {
         turn = new Vector3(0, 0, 0);
         carTexture = new Texture(texturePath);
         doorOpen = Gdx.audio.newMusic(Gdx.files.internal("car_door_open.mp3"));
-        engineStart = Gdx.audio.newMusic(Gdx.files.internal("car_start.mp3"));
+        engineStart = Gdx.audio.newMusic(Gdx.files.internal("car_engine_start.mp3"));
     }
 
     public void update(float delta, float speed) {
@@ -108,5 +110,10 @@ public class Car {
     private void updateBounds() {
         bounds.x = position.x;
         bounds.y = position.y;
+    }
+
+    @Override
+    public void draw(SpriteBatch batch) {
+        batch.draw(carTexture, position.x, position.y);
     }
 }

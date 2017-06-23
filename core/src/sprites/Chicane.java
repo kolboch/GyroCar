@@ -2,14 +2,17 @@ package sprites;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+
+import interfaces.MyDrawable;
 
 /**
  * Created by Karlo on 2017-06-03.
  */
 
-public class Chicane {
+public class Chicane implements MyDrawable{
 
     public static final float CHICANE_WIDTH, CHICANE_HEIGHT;
 
@@ -72,5 +75,11 @@ public class Chicane {
         boundsLeft.y = positionLeft.y;
         boundsRight.x = positionRight.x;
         boundsRight.y = positionRight.y;
+    }
+
+    @Override
+    public void draw(SpriteBatch batch) {
+        batch.draw(chicaneLeft, positionLeft.x , positionLeft.y);
+        batch.draw(chicaneRight, positionRight.x, positionRight.y);
     }
 }

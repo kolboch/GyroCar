@@ -15,6 +15,14 @@ public class MusicUtils {
 
     }
 
+    public static Music initAndPlay(String musicFilePath, float volume, boolean looping){
+        Music m = Gdx.audio.newMusic(Gdx.files.internal(musicFilePath));
+        m.setVolume(volume);
+        m.setLooping(looping);
+        m.play();
+        return m;
+    }
+
     public static void playMusicSequence(ArrayList<Music> musics, float volume) {
         if(musics != null && !musics.isEmpty()) {
             Music m = musics.get(0);

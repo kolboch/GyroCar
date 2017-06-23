@@ -1,16 +1,19 @@
 package sprites;
 
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
 import java.util.Random;
 
+import interfaces.MyDrawable;
+
 /**
  * Created by Karlo on 2017-06-04.
  */
 
-public class Obstacle {
+public class Obstacle implements MyDrawable{
 
     public static final float OBSTACLE_WIDTH;
     public static final float OBSTACLE_HEIGHT;
@@ -64,4 +67,8 @@ public class Obstacle {
         bounds.y = position.y;
     }
 
+    @Override
+    public void draw(SpriteBatch batch) {
+        batch.draw(obstacleTexture, position.x, position.y);
+    }
 }

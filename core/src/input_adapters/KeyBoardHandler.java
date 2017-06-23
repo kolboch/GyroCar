@@ -10,12 +10,12 @@ import sprites.Car;
  * Created by Karlo on 2017-06-06.
  */
 
-public class TestInputAdapter extends InputAdapter {
+public class KeyBoardHandler extends InputAdapter {
 
     private Car car;
     private final float CHANGE_VELOCITY;
 
-    public TestInputAdapter(Car car, float changeInVelocity) {
+    public KeyBoardHandler(Car car, float changeInVelocity) {
         super();
         this.car = car;
         this.CHANGE_VELOCITY = changeInVelocity;

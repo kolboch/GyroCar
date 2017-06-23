@@ -17,7 +17,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import input_adapters.AccelerometerHandler;
-import input_adapters.TestInputAdapter;
+import input_adapters.KeyBoardHandler;
+import music_utils.MusicUtils;
 import sprites.Car;
 import sprites.Chicane;
 import sprites.Obstacle;
@@ -31,8 +32,9 @@ public class GameScreen implements Screen {
     public static final int GROUND_SPEED = 150;
 
     private static final String LOG_TAG = GameScreen.class.getSimpleName();
+    private static final String MUSIC_BG = "background_race.mp3";
     private static final float BG_GREY = 41 / 255f;
-    private static final int ROAD_WIDTH_CAR_WIDTH_SCALE = 4;
+    private static final int ROAD_WIDTH_CAR_WIDTH_SCALE = 5;
     private static final int CHICANE_OFFSET = (int) -Chicane.CHICANE_HEIGHT / 2;
     private static final int NUMBER_OF_OBSTACLES = 7;
     private static final int OBSTACLE_SPACING = (int) (Car.CAR_HEIGHT * 3f);
@@ -51,7 +53,7 @@ public class GameScreen implements Screen {
     private OrthographicCamera camera;
     private SpriteBatch batch;
     private Viewport viewport;
-    private TestInputAdapter inputAdapter;
+    private KeyBoardHandler inputAdapter;
     private AccelerometerHandler accelerometerHandler;
     private float obstacleMinX, obstacleMaxX;
     private float groundSpeed;
@@ -77,12 +79,9 @@ public class GameScreen implements Screen {
         Gdx.app.log(LOG_TAG, "Show called");
         batch = new SpriteBatch();
         car = new Car(INIT_CAR_X, INIT_CAR_Y);
-        float leftChicaneX = (camera.viewportWidth - ROAD_WIDTH_CAR_WIDTH_SCALE * Car.CAR_WIDTH) / 2 - Chicane.CHICANE_WIDTH;
-        float rightChicaneX = leftChicaneX + Chicane.CHICANE_WIDTH + ROAD_WIDTH_CAR_WIDTH_SCALE * Car.CAR_WIDTH;
-        chicane1 = new Chicane(CHICANE_OFFSET, leftChicaneX, rightChicaneX);
-        chicane2 = new Chicane(CHICANE_OFFSET + Chicane.CHICANE_HEIGHT, leftChicaneX, rightChicaneX);
-        obstacleMinX = leftChicaneX + Chicane.CHICANE_WIDTH;
-        obstacleMaxX = rightChicaneX;
+        initChicanes();
+        obstacleMinX = chicane1.getPositionLeft().x + Chicane.CHICANE_WIDTH;
+        obstacleMaxX = chicane1.getPositionRight().x;
         initObstacles(INIT_CAR_Y + Car.CAR_HEIGHT * FIRST_OBSTACLE_OFFSET_CAR_HEIGHT_SCALE, obstacleMinX, obstacleMaxX);
         setInputAdapter(car);
         initMusic(MUSIC_VOLUME);
@@ -98,7 +97,7 @@ public class GameScreen implements Screen {
         checkCollisions();
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
-        batch.draw(car.getCarTexture(), car.getPosition().x, car.getPosition().y);
+        car.draw(batch);
         drawChicanes(batch);
         drawObstacles(batch);
         batch.end();
@@ -123,6 +122,13 @@ public class GameScreen implements Screen {
     public void hide() {
         Gdx.app.log(LOG_TAG, "Hide called");
         dispose();
+    }
+
+    private void initChicanes() {
+        float leftChicaneX = (camera.viewportWidth - ROAD_WIDTH_CAR_WIDTH_SCALE * Car.CAR_WIDTH) / 2 - Chicane.CHICANE_WIDTH;
+        float rightChicaneX = leftChicaneX + Chicane.CHICANE_WIDTH + ROAD_WIDTH_CAR_WIDTH_SCALE * Car.CAR_WIDTH;
+        chicane1 = new Chicane(CHICANE_OFFSET, leftChicaneX, rightChicaneX);
+        chicane2 = new Chicane(CHICANE_OFFSET + Chicane.CHICANE_HEIGHT, leftChicaneX, rightChicaneX);
     }
 
     private void updateAll(float delta) {
@@ -157,8 +163,7 @@ public class GameScreen implements Screen {
 
     private void drawObstacles(SpriteBatch batch) {
         for (int i = 0; i < obstacles.size(); i++) {
-            Obstacle current = obstacles.get(i);
-            batch.draw(current.getObstacleTexture(), current.getPosition().x, current.getPosition().y);
+            obstacles.get(i).draw(batch);
         }
     }
 
@@ -181,14 +186,10 @@ public class GameScreen implements Screen {
     }
 
     private void drawChicanes(SpriteBatch batch) {
-        drawChicane(chicane1, batch);
-        drawChicane(chicane2, batch);
+        chicane1.draw(batch);
+        chicane2.draw(batch);
     }
 
-    private void drawChicane(Chicane chicane, SpriteBatch batch) {
-        batch.draw(chicane.getChicaneLeftTexture(), chicane.getPositionLeft().x, chicane.getPositionLeft().y);
-        batch.draw(chicane.getChicaneRightTexture(), chicane.getPositionRight().x, chicane.getPositionRight().y);
-    }
 
     private void handleInput() {
         if (Gdx.input.isKeyJustPressed(Input.Keys.BACKSPACE)) {
@@ -201,7 +202,7 @@ public class GameScreen implements Screen {
             Gdx.app.log(LOG_TAG, "Acc available");
             accelerometerHandler = new AccelerometerHandler(car, ACCELEROMETER_INTENSIFIER);
         } else {
-            inputAdapter = new TestInputAdapter(car, TURN_REACTION);
+            inputAdapter = new KeyBoardHandler(car, TURN_REACTION);
             Gdx.input.setInputProcessor(inputAdapter);
         }
     }
@@ -223,19 +224,16 @@ public class GameScreen implements Screen {
         setInputAdapter(car);
     }
 
-    private void disableInputs(){
+    private void disableInputs() {
         accelerometerHandler = null;
         Gdx.input.setInputProcessor(null);
     }
 
     private void initMusic(float volume) {
-        backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("background.mp3"));
-        backgroundMusic.setVolume(volume);
-        backgroundMusic.setLooping(true);
-        backgroundMusic.play();
+        backgroundMusic = MusicUtils.initAndPlay(MUSIC_BG, volume, true);
     }
 
-    private void raceStartMusic(float volume){
+    private void raceStartMusic(float volume) {
         car.playCarStartSounds(volume, this);
     }
 
