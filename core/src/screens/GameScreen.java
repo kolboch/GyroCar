@@ -22,6 +22,7 @@ import music_utils.MusicUtils;
 import sprites.Car;
 import sprites.Chicane;
 import sprites.Obstacle;
+import sprites.Score;
 
 /**
  * Created by Karlo on 2017-06-03.
@@ -42,6 +43,7 @@ public class GameScreen implements Screen {
     private static final float TURN_REACTION = 100;
     private static final float ACCELEROMETER_INTENSIFIER = 30;
     private static final float MUSIC_VOLUME = 0.7f;
+    private static final float OBSTACLE_AVOIDED_PRIZE = 5;
 
     private final int INIT_CAR_X;
     private final int INIT_CAR_Y;
@@ -49,6 +51,7 @@ public class GameScreen implements Screen {
     private Car car;
     private Chicane chicane1, chicane2;
     private List<Obstacle> obstacles;
+    private Score score;
     private Game game;
     private OrthographicCamera camera;
     private SpriteBatch batch;
@@ -58,6 +61,7 @@ public class GameScreen implements Screen {
     private float obstacleMinX, obstacleMaxX;
     private float groundSpeed;
     private Music backgroundMusic;
+    private boolean isStatePaused;
 
     public GameScreen(Game game) {
         this.game = game;
@@ -83,8 +87,10 @@ public class GameScreen implements Screen {
         obstacleMinX = chicane1.getPositionLeft().x + Chicane.CHICANE_WIDTH;
         obstacleMaxX = chicane1.getPositionRight().x;
         initObstacles(INIT_CAR_Y + Car.CAR_HEIGHT * FIRST_OBSTACLE_OFFSET_CAR_HEIGHT_SCALE, obstacleMinX, obstacleMaxX);
+        score = new Score(0, 0, MyGdxGame.GAME_HEIGHT);
         setInputAdapter(car);
         initMusic(MUSIC_VOLUME);
+        isStatePaused = false;
         startGameEffect();
     }
 
@@ -100,6 +106,7 @@ public class GameScreen implements Screen {
         car.draw(batch);
         drawChicanes(batch);
         drawObstacles(batch);
+        score.draw(batch);
         batch.end();
     }
 
@@ -136,6 +143,9 @@ public class GameScreen implements Screen {
         updateCamera();
         updateChicanes();
         updateObstacles();
+        if (!isStatePaused) {
+            score.update(camera.position.x, camera.position.y - camera.viewportHeight / 2, 0.01f);
+        }
         if (accelerometerHandler != null) {
             accelerometerHandler.update();
         }
@@ -169,11 +179,16 @@ public class GameScreen implements Screen {
 
     private void updateObstacles() {
         if (obstacles.get(0).getPosition().y + Obstacle.OBSTACLE_HEIGHT < camera.position.y - camera.viewportHeight / 2) {
+            obstacleAvoided();
             Obstacle toReposition = obstacles.remove(0);
             Obstacle last = obstacles.get(obstacles.size() - 1);
             toReposition.reposition(last.getPosition().y + Obstacle.OBSTACLE_HEIGHT + OBSTACLE_SPACING, obstacleMinX, obstacleMaxX);
             obstacles.add(toReposition);
         }
+    }
+
+    private void obstacleAvoided() {
+        score.update(OBSTACLE_AVOIDED_PRIZE);
     }
 
     private void updateChicanes() {
@@ -189,7 +204,6 @@ public class GameScreen implements Screen {
         chicane1.draw(batch);
         chicane2.draw(batch);
     }
-
 
     private void handleInput() {
         if (Gdx.input.isKeyJustPressed(Input.Keys.BACKSPACE)) {
@@ -214,12 +228,14 @@ public class GameScreen implements Screen {
 
     private void stopMovement() {
         groundSpeed = 0;
+        isStatePaused = true;
         backgroundMusic.setVolume(backgroundMusic.getVolume() / 5);
         disableInputs();
     }
 
     public void resumeMovement() {
         groundSpeed = GROUND_SPEED;
+        isStatePaused = false;
         backgroundMusic.setVolume(MUSIC_VOLUME);
         setInputAdapter(car);
     }
@@ -244,6 +260,7 @@ public class GameScreen implements Screen {
         batch.dispose();
         chicane1.dispose();
         chicane2.dispose();
+        score.dispose();
         for (int i = 0; i < obstacles.size(); i++) {
             obstacles.get(i).dispose();
         }
